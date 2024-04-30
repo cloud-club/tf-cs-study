@@ -244,7 +244,7 @@ www.naver.com에 접속할때  일어나는 일에 대해 설명해주세요.
 
 1. URL 입력: 브라우저의 주소창에 www.naver.com을 입력합니다.
 
-2. DNS 조회: DNS 서버는 도메인 네임을 IP로 변환해주는 역할을 합니다. 먼저 Local DNS에게 URL을 물어보고, 해당 주소가 캐싱되어있다면 바로 IP 주소를 반환하고 그렇지 않다면 다음 단계로 넘어갑니다. Local DNS는 주소를 찾아내기 위해 다른 DNS 서버들과 통신을 시작하게 되며 재귀적으로 Root DNS, TLD DNS, 도메인 DNS에게 차례로 물어보며 IP 주소를 찾게 됩니다.
+2. DNS 조회: DNS 서버는 도메인 네임을 IP로 변환해주는 역할을 합니다. 먼저 Local DNS에게 URL을 물어보고, 해당 주소가 캐싱되어있다면 바로 IP 주소를 반환하고 그렇지 않다면 다음 단계로 넘어갑니다. Local DNS는 주소를 찾아내기 위해 다른 DNS 서버들과 통신을 시작하게 되며 재귀적으로 Root DNS, TLD DNS, Authoritative DNS에게 차례로 물어보며 IP 주소를 찾게 됩니다.
 
 3. TCP 연결: IP 주소를 획득한 후, 브라우저는 목적지 서버와의 안정적인 통신을 위해 TCP(Transmission Control Protocol) 연결을 시도합니다.(이때 HTTPS인 경우 SSL/TLS 핸드세이크 과정도 진행됩니다.) 이 과정에서는 일반적으로 www.naver.com 서버의 80번 포트(HTTP) 또는 443번 포트(HTTPS)에 연결하려고 합니다.
 
