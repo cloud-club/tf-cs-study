@@ -680,3 +680,215 @@ MSA는 대규모 프로젝트에 적합하며, 서비스 간 독립성으로 인
 요약하면, MSA는 모놀리식 구조에 비해 아키텍처 구조, 개발 및 배포, 확장성, 복잡도, 장애 격리 등 다양한 측면에서 장점을 가지고 있습니다. 프로젝트의 규모와 요구사항에 따라 적절한 아키텍처를 선택하는 것이 중요합니다.
 </div>
 </details>
+
+<details>
+<summary>
+Client에서 Kubernetes의 Cluster 로 접근하는 방법
+</summary>
+<div>
+**`kubectl` 외에도 Kubernetes API에 직접 접근하는 방법, Kubernetes 대시보드 사용, 그리고 클라우드 제공업체가 제공하는 관리 콘솔 등을 통해서도 클러스터에 접근할 수 있습니다.**
+
+또한 언어별 라이브러리를 이용하는 방법도 있습니다.
+</div>
+</details>
+
+<details>
+<summary>
+calico overlay network란?
+</summary>
+<div>
+
+Calico는 컨테이너, 가상 머신, 네이티브 호스트 워크로드를 위한 네트워크 및 네트워크 보안 솔루션을 제공하는 오픈소스 프로젝트입니다. Kubernetes 클러스터에서 네트워크 플러그인으로 널리 사용되며, 높은 성능과 간단한 네트워킹 모델, 네트워크 폴리시를 통한 상세한 네트워크 액세스 제어 기능을 제공합니다.
+
+Calico는 오버레이 네트워크를 선택적으로 사용할 수 있는데, 오버레이 네트워크는 물리적 네트워크 위에 가상 네트워크를 구축하는 기술입니다. 이를 통해 컨테이너들이 동일한 물리 네트워크에 있지 않아도 서로 통신할 수 있게 해줍니다. Calico에서는 주로 다음 두 가지 오버레이 네트워킹 모드를 제공합니다
+
+IP-in-IP (IP encapsulation): IP-in-IP 모드는 한 IP 패킷을 다른 IP 패킷 내에 캡슐화하여, 중간 네트워크가 원본 패킷의 내용을 몰라도 목적지에 도달할 수 있도록 합니다. 이 방식은 주로 L3 네트워킹을 사용하는 환경에서, 다른 클러스터 노드로의 트래픽을 라우팅할 때 사용됩니다.VXLAN (Virtual Extensible LAN): VXLAN은 네트워크 내의 가상 네트워크를 생성하기 위해 사용되는 오버레이 네트워킹 기술입니다. VXLAN은 매우 큰 수의 격리된 네트워크 세그먼트를 생성할 수 있으며, IP-in-IP에 비해 더 복잡한 네트워크 환경에서 활용될 수 있습니다.
+
+calico를 사용할 때, 오버레이 네트워킹은 선택적입니다. 즉, 클러스터가 동일한 L2 네트워크 내에 있고, 네트워크 격리가 물리적 또는 다른 방법으로 이미 충분히 제공되는 경우 오버레이 네트워크 없이 네이티브 L3 라우팅을 사용할 수 있습니다. 이는 오버레이 네트워크를 사용하지 않을 때 성능상의 이점을 제공할 수 있습니다. 반면, 다양한 클라우드 제공 업체 또는 온프레미스 환경에서 워크로드를 운영할 경우 오버레이 네트워킹이 네트워크 격리 및 통신을 위해 필요할 수 있습니다.**
+
+Calico의 오버레이 네트워킹 기능은 클러스터의 네트워크 요구 사항에 따라 유연하게 구성할 수 있어, 다양한 환경과 요구 사항에 맞는 네트워킹 솔루션을 제공합니다.
+
+</div>
+</details>
+
+
+<details>
+<summary>
+kubernetes taint & tolerations
+</summary>
+<div>
+
+**쿠버네티스(Kubernetes)에서 테인트(Taint)란 특정 노드(Node)에 파드(Pod)가 스케줄되는 것을 허용하거나 금지하기 위해 사용되는 메커니즘입니다. 테인트는 노드에 부여되며, 파드가 해당 노드에 스케줄되기 위해서는 해당 테인트를 "용인"할 수 있는 적절한 톨러레이션(Toleration)을 가져야 합니다.**
+
+**테인트는 주로 세 가지 속성으로 구성됩니다: 키(key), 값(value), 그리고 효과(effect). 테인트의 효과에는 주로 다음 세 가지가 있습니다:**
+
+**NoSchedule: 이 효과를 가진 테인트가 노드에 있으면, 적절한 톨러레이션이 없는 파드는 그 노드에 스케줄될 수 없습니다.PreferNoSchedule: 이는 NoSchedule보다 더 유연한 옵션으로, 쿠버네티스 스케줄러가 가능한 해당 노드를 피하려고 하지만, 필요한 경우에는 파드를 스케줄할 수 있습니다.NoExecute: 이 효과를 가진 테인트가 노드에 추가되면, 적절한 톨러레이션이 없는 파드는 노드에서 즉시 제거되고, 새로운 파드는 스케줄될 수 없습니다.**
+
+**테인트를 노드에 추가하기 위해서는 `kubectl taint` 명령어를 사용할 수 있습니다. 예를 들어, 노드에 "NoSchedule" 효과를 가진 테인트를 추가하려면 다음과 같이 명령을 실행할 수 있습니다:**
+
+```bash
+bashkubectl taint nodes <노드 이름> key=value:NoSchedule
+
+```
+
+**테인트와 반대로, 톨러레이션은 파드 사양에 정의되며, 특정 테인트를 "용인"할 수 있게 해 줍니다. 즉, 테인트가 있는 노드에도 파드가 스케줄될 수 있게 해 줍니다. 톨러레이션은 파드의 `tolerations` 필드에 추가됩니다.**
+
+**테인트와 톨러레이션을 사용함으로써, 쿠버네티스 클러스터에서 파드가 스케줄링되는 방식을 더 세밀하게 제어할 수 있습니다. 이는 특정 작업을 수행할 수 있는 노드에만 파드를 스케줄하는 등의 경우에 유용하게 사용될 수 있습니다.**
+</div>
+</details>
+
+<details>
+<summary>
+kubernetes service란?
+</summary>
+<div>
+
+Kubernetes에서 서비스(Service)는 애플리케이션의 컴포넌트들 사이, 혹은 외부와의 통신을 중계하는 추상적인 개념입니다. 서비스는 쿠버네티스 클러스터 내에서 실행되는 포드(Pod)들에 대한 지속적인 접근 방법을 제공합니다. 포드는 일반적으로 동적으로 생성되고 소멸되기 때문에, IP 주소가 자주 바뀔 수 있습니다. 서비스는 이러한 포드들의 논리적 집합에 대해 안정적인 주소와 액세스 방법을 제공함으로써, 이 문제를 해결합니다.
+
+### 서비스의 주요 기능
+- 로드 밸런싱: 서비스는 클라이언트 요청을 서비스에 연결된 여러 포드 사이에 분산시켜 로드 밸런싱을 수행합니다. 이는 애플리케이션의 가용성과 확장성을 향상시킵니다.
+- 서비스 디스커버리: 서비스는 쿠버네티스 내부 DNS에 등록되어, 다른 컴포넌트들이 서비스 이름을 통해 상호 연결될 수 있도록 합니다. 이를 통해 포드들이 동적으로 변해도, 서비스에 연결된 컴포넌트들은 안정적으로 통신할 수 있습니다.
+- 안정적인 통신: 서비스는 포드 그룹에 대한 안정적인 접근점을 제공합니다. 이는 포드의 IP 주소가 변경되더라도, 서비스를 통해 지속적으로 통신이 가능하게 합니다.
+
+### 서비스 타입
+- ClusterIP: 기본 서비스 타입으로, 클러스터 내부에서만 접근 가능한 내부 IP를 할당받습니다.
+- NodePort: 클러스터 외부에서 접근 가능하도록, 모든 노드의 특정 포트를 통해 서비스에 접근할 수 있게 합니다.
+- LoadBalancer: 클라우드 제공자의 로드 밸런서를 사용하여 서비스에 외부 IP 주소를 할당하고, 외부에서 서비스에 접근할 수 있게 합니다.
+- ExternalName: 서비스를 쿠버네티스 클러스터 외부의 URL로 매핑합니다. 이 타입은 포드와 직접적으로 연결되지 않습니다.
+</div>
+</details>
+
+
+<details>
+<summary>
+kubernetes ingress란
+</summary>
+<div>
+
+Kubernetes Ingress는 클러스터 내부의 서비스에 외부에서 접근할 수 있도록 하는 API 객체입니다. Ingress를 사용하면 HTTP, HTTPS와 같은 트래픽을 클러스터 내의 서비스로 라우팅할 수 있으며, 로드 밸런싱, SSL/TLS 종료 및 이름 기반의 가상 호스팅을 제공합니다.
+
+### Ingress의 주요 기능
+- 경로 기반 라우팅: 클라이언트 요청의 URL 경로를 기반으로 다른 서비스로 트래픽을 라우팅합니다. 예를 들어, /video 요청을 비디오 관련 서비스로, /image 요청을 이미지 관련 서비스로 라우팅할 수 있습니다.
+- 호스트 기반 라우팅: 클라이언트 요청의 도메인 이름을 기반으로 트래픽을 라우팅합니다. 이를 통해 단일 IP 주소를 사용하여 여러 도메인을 처리할 수 있습니다.
+- SSL/TLS 종료: Ingress 컨트롤러는 SSL/TLS 종료를 처리할 수 있으며, 이를 통해 클러스터 내부의 통신을 보호할 수 있습니다.
+
+Ingress를 사용하기 위해서는 Ingress 컨트롤러가 필요합니다. Ingress 컨트롤러는 Ingress 규칙에 따라 트래픽을 적절한 서비스로 라우팅하는 역할을 합니다. Kubernetes는 여러 Ingress 컨트롤러를 지원하며, 사용자는 자신의 요구 사항에 맞는 Ingress 컨트롤러를 선택하여 사용할 수 있습니다.
+
+### Ingress 사용 사례
+- 단일 IP 주소를 사용하여 여러 도메인을 호스팅하는 경우
+- HTTPS를 통한 안전한 통신이 필요한 경우
+- 경로 또는 호스트 기반으로 트래픽을 라우팅해야 하는 경우
+</div>
+</details>
+
+
+<details>
+<summary>
+모니터링 툴을 사용해본 적이 있는가? 있다면 그에 관해 설명하라.
+</summary>
+<div>
+
+kubernetes 자체에서 지원되는 kubernetes dashboard가 있고 prometheus와 grafana 조합으로 kubernetes 내에서 실행 중인 애플리케이션과 인프라의 실시간 성능 모니터링 및 분석을 할 수 있습니다.
+
+### Prometheus
+Prometheus는 오픈 소스 모니터링 및 알람 시스템으로, 구글의 Borgmon에서 영감을 받아 개발되었습니다. 주로 시계열 데이터를 수집하고 저장하는 데 사용되며, Kubernetes와 같은 동적인 서비스 디스커버리 환경에서 효율적으로 작동합니다.
+#### Prometheus 기능
+- 다양한 데이터 소스 수집: Prometheus는 HTTP 경로를 통해 메트릭을 노출하는 어떤 서비스로부터도 데이터를 수집할 수 있습니다. 이는 Kubernetes 상의 서비스들이 Prometheus와 쉽게 통합될 수 있음을 의미합니다.
+- 서비스 디스커버리: Kubernetes 클러스터 내에서 실행 중인 서비스를 자동으로 발견하고 모니터링할 수 있습니다.
+- 강력한 쿼리 언어: Prometheus는 자체 쿼리 언어인 PromQL을 제공하여, 수집된 데이터를 기반으로 복잡한 질의와 계산을 수행할 수 있습니다.
+- 알람: Prometheus는 Alertmanager와 통합되어, 지정된 규칙에 따라 알람를 생성하고 관리할 수 있습니다.
+### Grafana
+Grafana는 다양한 데이터 소스로부터 수집된 데이터를 시각화하는 데 사용되는 오픈 소스 분석 및 모니터링 소프트웨어입니다. Grafana는 사용자가 대시보드를 통해 데이터를 쉽게 이해하고 분석할 수 있도록 도와줍니다. 
+#### Grafana 기능
+- 다양한 데이터 시각화 옵션: Grafana는 그래프, 테이블, 히트맵 등 다양한 시각화 옵션을 제공합니다. 사용자는 이를 통해 데이터를 쉽게 분석하고 이해할 수 있습니다.
+- 강력한 대시보드: Grafana 대시보드는 사용자가 중요한 메트릭을 한눈에 볼 수 있도록 커스터마이징할 수 있습니다.
+- 알람: Grafana는 데이터 트렌드를 모니터링하고 특정 조건이 충족될 때 알람을 발송하는 기능을 제공합니다.
+### Kubernetes에서의 통합
+- Prometheus 설치: Prometheus 서버를 Kubernetes 클러스터에 설치하고, 서비스 디스커버리를 활성화하여 클러스터 내의 서비스를 자동으로 발견하도록 설정합니다.
+- 메트릭 수집: Kubernetes 클러스터 및 클러스터 내에서 실행 중인 애플리케이션으로부터 메트릭을 수집합니다. (이때 PodMonitor 종류의 리소스를 사용)
+- Grafana 설치: Grafana를 Kubernetes 클러스터에 설치합니다.
+- Prometheus를 데이터 소스로 Grafana 구성: Grafana에서 Prometheus를 데이터 소스로 추가하여, 수집된 메트릭을 시각화합니다.
+
+
+### Thanos
+Thanos는 Prometheus의 확장 프로젝트로, 크게 확장성과 장기 저장 문제를 해결하기 위해 설계되었습니다. Prometheus 인스턴스가 증가함에 따라 데이터를 효율적으로 관리하고, 데이터 손실 위험 없이 장기간 저장할 수 있는 방법을 제공합니다. 
+#### Thanos 특징
+- 장기 데이터 보관: Thanos는 저렴한 객체 스토리지(S3, GCS 등)를 사용하여 Prometheus 메트릭 데이터를 장기간 보관할 수 있습니다.
+- 확장성: Thanos는 여러 Prometheus 인스턴스에서 수집된 데이터를 쿼리할 수 있는 글로벌 쿼리 레이어를 제공합니다. 이를 통해 대규모 시스템에서도 효율적인 데이터 질의가 가능합니다.
+- 고가용성: Thanos는 데이터 복제를 통해 메트릭 데이터의 고가용성을 보장합니다. 이는 데이터 손실 위험을 줄이고, 시스템의 신뢰성을 높입니다.
+- 효율적인 데이터 압축 및 다운샘플링: 장기 저장을 위한 데이터의 압축과 다운샘플링을 지원하여, 스토리지 비용을 최적화합니다.
+Thanos는 Prometheus의 기능을 확장하여 대규모 시스템에서의 모니터링 요구 사항을 충족시키며, 장기 데이터 보관 및 분석을 가능하게 합니다. 이러한 이유로 Prometheus와 Thanos는 함께 사용될 때 클라우드 네이티브 환경에서의 모니터링 및 알림 시스템을 위한 강력한 조합을 이룹니다.
+</div>
+</details>
+
+
+<details>
+<summary>
+kubernetes에서 계정 권한 설정하는 방법
+</summary>
+<div>
+
+Kubernetes에서 계정 권한을 설정하는 것은 주로 Role-Based Access Control (RBAC)을 통해 이루어집니다. RBAC는 사용자, 그룹, 또는 서비스 계정에 대한 권한을 제어하는 데 사용되는 방법입니다. Kubernetes 클러스터 내의 리소스에 대한 접근을 세밀하게 제어할 수 있게 해주며, 네임스페이스 수준에서 또는 클러스터 전체 수준에서 권한을 설정할 수 있습니다.
+
+#### 기본 개념
+Role과 ClusterRole: 이들은 권한의 집합을 정의합니다. Role은 특정 네임스페이스 내에서만 유효한 권한을, ClusterRole은 클러스터 전체에서 유효한 권한을 정의합니다.
+RoleBinding과 ClusterRoleBinding: 이들은 특정 사용자, 그룹, 또는 서비스 계정에게 Role이나 ClusterRole을 할당합니다. RoleBinding은 특정 네임스페이스에, ClusterRoleBinding은 클러스터 전체에 적용됩니다.
+#### 권한 설정 예제
+1. Role 생성하기: 특정 네임스페이스에서 Pod 리소스를 조회할 수 있는 권한을 정의하는 Role을 생성합니다.
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: your-namespace
+  name: pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+```
+2. RoleBinding 생성하기: 특정 사용자에게 위에서 생성한 Role을 할당합니다.
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods
+  namespace: your-namespace
+subjects:
+- kind: User
+  name: "your-user-name"
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+```
+3. ClusterRole 생성하기: 클러스터 전체에서 모든 네임스페이스의 Pod 리소스를 조회할 수 있는 권한을 정의하는 ClusterRole을 생성합니다.
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pod-reader-global
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+```
+4. ClusterRoleBinding 생성하기: 특정 사용자에게 위에서 생성한 ClusterRole을 할당합니다.
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: read-pods-global
+subjects:
+- kind: User
+  name: "your-user-name"
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: pod-reader-global
+  apiGroup: rbac.authorization.k8s.io
+```
+
+</div>
+</details>
+
